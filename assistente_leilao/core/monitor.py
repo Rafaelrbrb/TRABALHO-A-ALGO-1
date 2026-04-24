@@ -12,8 +12,8 @@ def monitorar(driver, xpath, regex, timeout, callback=None):
         print("Não foi possível encontrar o preço inicial. Encerrando.")
         return
 
-    preco_atual = round(preco_atual, 2)
-    print(f"Preço inicial: R$ {preco_atual:.2f}")
+
+    print(f"Preço inicial: R$ {preco_atual:.4f}")
 
     while True:
         try:
@@ -26,7 +26,6 @@ def monitorar(driver, xpath, regex, timeout, callback=None):
                 print("Não foi possível ler o preço, tentando novamente...")
                 continue
 
-            novo_preco = round(novo_preco, 2)
 
             if novo_preco != preco_atual:
                 registrar_mudanca(preco_atual, novo_preco)
@@ -34,7 +33,7 @@ def monitorar(driver, xpath, regex, timeout, callback=None):
                     callback(preco_antigo=preco_atual, preco_novo=novo_preco)
                 preco_atual = novo_preco
             else:
-                print(f"Sem mudança. Preço atual: R$ {preco_atual:.2f}")
+                print(f"Sem mudança. Preço atual: R$ {preco_atual:.4f}")
 
         except KeyboardInterrupt:
             print("Monitoramento encerrado pelo usuário.")
