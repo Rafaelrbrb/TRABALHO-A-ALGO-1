@@ -1,98 +1,51 @@
-# 📌 TRABALHO-A-ALGO-1
+# 🤖 Assistente de Lances para Leilão
 
-Projeto desenvolvido para a disciplina de Algoritmos e Programação, com foco na prática de lógica de programação utilizando Java.
+Este projeto é um sistema de automação e monitoramento de preços em tempo real, desenvolvido para identificar variações em páginas web e realizar ações automáticas em sistemas externos.
 
+## 👥 Identificação
+- **Desenvolvedores:** Leonardo Lustosa
+Rafael 
+Davi
+Matheus
+Arthur
+Nikolas
+- **Status:** Funcional / Versão Final
+
+## 📂 Estrutura do Projeto
+```text
+.
+├── automation/
+│   ├── action.py      # Interação com formulários externos (httpbin)
+│   └── browser.py     # Configuração do Selenium (Modo Ninja)
+├── core/
+│   ├── monitor.py     # Loop de monitoramento e comparação
+│   ├── scraper.py     # Extração e limpeza de dados (XPath/Regex)
+│   └── validator.py   # Validação de entradas do usuário
+├── interface/
+│   └── gui.py         # Interface gráfica em Tkinter
+├── logs/
+│   ├── activity_log.txt # Histórico de ações do usuário
+│   └── price_log.txt    # Histórico de variações de preço
+├── main.py            # Ponto de entrada do sistema
+└── test_scraper.py    # Testes unitários automatizados
+🚀 Como ExecutarInstale as dependências: pip install selenium webdriver-managerExecute o arquivo principal: python main.pyPara rodar os testes: python test_scraper.py⚙️ Informações TécnicasAnálise de Complexidade (Big O)A localização da variável na página via XPath ou Regex possui uma complexidade de $O(N)$, onde $N$ é o número total de elementos (nós) no DOM da página. Isso ocorre porque o motor de busca do navegador precisa percorrer a árvore de elementos para encontrar o padrão correspondente.LogsActivity Log: Registra cada clique, erro e início de sessão do usuário.Price Log: Registra o valor antigo, o valor novo e a variação exata detectada.
 ---
 
-## 🚀 Descrição
+### 2. Criar o arquivo de Testes (Para ganhar +1 ponto)
+O professor pediu testes unitários. Crie um arquivo chamado **`test_scraper.py`** e cole isso:
 
-Este repositório contém uma coleção de exercícios resolvidos em Java, abordando conceitos fundamentais da programação.
+```python
+import unittest
+from core.scraper import extrair_numero
 
-Os algoritmos implementados têm como objetivo reforçar o raciocínio lógico e a resolução de problemas computacionais básicos.
+class TestScraper(unittest.TestCase):
+    def test_conversao_padrao_br(self):
+        # Testa se converte 395.308,92 para 395308.92
+        self.assertEqual(extrair_numero("395.308,92"), 395308.92)
 
----
+    def test_limpeza_texto_sujo(self):
+        # Testa se limpa símbolos de moeda e porcentagem
+        self.assertEqual(extrair_numero("R$ 1.250,00 +0,15%"), 1250.00)
 
-## 🧠 Conteúdos abordados
-
-* Estrutura sequencial
-* Estruturas condicionais (`if/else`)
-* Estruturas de repetição (`for`, `while`)
-* Entrada e saída de dados
-* Operações matemáticas básicas
-
----
-
-## 🛠️ Tecnologias utilizadas
-
-* Java
-* IDE: Eclipse (ou similar)
-* Git e GitHub para versionamento
-
----
-
-## 📂 Estrutura do projeto
-
-```
-src/
- └── arquivos .java com exercícios práticos
-```
-
----
-
-## ▶️ Como executar
-
-1. Clone o repositório:
-
-```bash
-git clone https://github.com/Rafaelrbrb/TRABALHO-A-ALGO-1.git
-```
-
-2. Acesse o diretório do projeto:
-
-```bash
-cd TRABALHO-A-ALGO-1
-```
-
-3. Compile e execute os arquivos Java:
-
-```bash
-javac NomeDoArquivo.java
-java NomeDoArquivo
-```
-
-Ou execute diretamente pela IDE (Eclipse).
-
----
-
-## 🎯 Objetivo
-
-* Desenvolver lógica de programação
-* Praticar estruturas básicas da linguagem Java
-* Resolver problemas computacionais simples
-
----
-
-## 📚 Aprendizados
-
-Durante o desenvolvimento deste projeto foram trabalhados:
-
-* Pensamento lógico e estruturado
-* Resolução de problemas
-* Organização de código
-* Uso de estruturas de controle
-
----
-
-## 👨‍💻 Autores
-
-* Matheus
-* Nicolas
-* Leonardo
-* Arthur
-* Rafael
-
----
-
-## 📄 Licença
-
-Projeto desenvolvido para fins acadêmicos.
+if __name__ == "__main__":
+    unittest.main()
