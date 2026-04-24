@@ -21,3 +21,7 @@ def obter_nome_usuario() -> str:
             registrar_acao(nome, "sessão iniciada")
             return nome
         print("Nome inválido: deve ter ao menos 3 letras e conter apenas letras.")
+
+def limpar_log() -> None:
+    with open(LOG_FILE, "w", encoding="utf-8") as f:
+        f.write("")
