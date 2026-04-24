@@ -1,0 +1,3 @@
+[2026-04-23 23:42:40] marcos: sessão iniciada via GUI
+[2026-04-23 23:51:44] bobidi: sessão iniciada via GUI
+[2026-04-23 23:55:25] bobi: sessão iniciada via GUI
