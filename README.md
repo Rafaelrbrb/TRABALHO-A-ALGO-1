@@ -1,76 +1,73 @@
-```markdown
-# Assistente de Lances
+# 💻 Assistente de Lances
 
-Trabalho prático da disciplina de Análise de Algoritmos.
+Trabalho prático da disciplina de **Análise de Algoritmos**.
 
-Sistema que monitora o preço de uma página web em tempo real e, ao detectar mudanças, registra automaticamente o valor antigo e o novo em outra página pública.
-
----
-
-## Integrantes
-
-- Arthur
-- Davi
-- Leonardo
-- Matheus
-- Nikolas
-- Rafael
+O projeto consiste em um sistema que monitora o preço de uma página web em tempo real e, ao detectar alterações, registra automaticamente o valor antigo e o novo em outra página pública.
 
 ---
 
-## Requisitos
+## 👥 Integrantes
 
-- Python 3.10 ou superior
+- Arthur  
+- Davi  
+- Leonardo  
+- Matheus  
+- Nikolas  
+- Rafael  
+
+---
+
+## ⚙️ Requisitos
+
+- Python **3.10 ou superior**
 - Google Chrome instalado
 
 ---
 
-## Instalação
+## 🚀 Instalação
 
-1. Clone o repositório:
-```
-git clone <url-do-repositorio>
+```bash
+git clone <URL_DO_REPOSITORIO>
 cd TRABALHO-A-ALGO-1
-```
-
-2. Instale as dependências:
-```
 pip install -r requirements.txt
 ```
 
 ---
 
-## Como executar
+## ▶️ Como executar
 
-Entre na pasta do projeto e rode:
-```
+```bash
 cd assistente_leilao
 python main.py
 ```
 
-O sistema vai pedir as seguintes informações no terminal:
+---
 
-- **Nome** — seu nome (mínimo 3 letras, apenas letras)
-- **URL** — endereço da página a ser monitorada
-- **XPath** — caminho do campo de preço na página (ou deixe vazio)
-- **Regex** — padrão para encontrar o preço (ou deixe vazio)
-- **Intervalo** — tempo em segundos entre cada verificação
+## 🧾 Entradas do sistema
+
+Durante a execução, o sistema solicitará:
+
+- **Nome** → mínimo de 3 letras (apenas letras)
+- **URL** → página a ser monitorada
+- **XPath** → caminho do elemento de preço (opcional)
+- **Regex** → padrão alternativo para encontrar o preço (opcional)
+- **Intervalo** → tempo em segundos entre cada verificação
 
 ---
 
-## Como descobrir o XPath de um elemento
+## 🔍 Como descobrir o XPath
 
-1. Abre a página no Chrome
-2. Clica com o botão direito no preço
-3. Clica em **Inspecionar**
-4. Clica com o botão direito no elemento destacado
-5. **Copy → Copy XPath**
+1. Abra a página no Chrome  
+2. Clique com o botão direito no preço  
+3. Clique em **Inspecionar**  
+4. Clique com o botão direito no elemento destacado  
+5. Vá em **Copy → Copy XPath**
 
 ---
 
-## Exemplo de uso
+## 💡 Exemplo de uso
 
-Para monitorar o preço do Bitcoin:
+Monitorando o preço do Bitcoin:
 
 - URL: `https://finance.yahoo.com/quote/BTC-USD`
 - XPath: `//*[@data-testid="qsp-price"]`
@@ -78,52 +75,56 @@ Para monitorar o preço do Bitcoin:
 
 ---
 
-## Funcionamento
+## ⚙️ Funcionamento
 
-1. O sistema abre a página informada e lê o preço inicial
-2. A cada intervalo definido, recarrega a página e verifica se o preço mudou
-3. Quando detecta uma mudança:
-   - Exibe no terminal o valor antigo e o novo
-   - Registra a ação no arquivo de log
-   - Acessa a página `https://demoqa.com/text-box` em um segundo browser
-   - Insere o texto com os dois valores e clica em Submit
-4. Continua monitorando até o usuário encerrar com `Ctrl+C`
+1. O sistema acessa a página e captura o preço inicial  
+2. A cada intervalo:
+   - Recarrega a página  
+   - Verifica se houve mudança  
+3. Se o preço mudar:
+   - Exibe o valor antigo e o novo no terminal  
+   - Registra a mudança em log  
+   - Acessa `https://demoqa.com/text-box`  
+   - Preenche e envia automaticamente  
+4. O monitoramento continua até `Ctrl + C`
 
 ---
 
-## Estrutura do projeto
+## 🗂️ Estrutura do projeto
 
-```
+```bash
 assistente_leilao/
 ├── core/
-│   ├── scraper.py       # localiza e extrai o preço da página
-│   ├── monitor.py       # loop de monitoramento
-│   └── validator.py     # validação das entradas do usuário
+│   ├── scraper.py
+│   ├── monitor.py
+│   └── validator.py
 ├── automation/
-│   ├── browser.py       # gerencia o Chrome via Selenium
-│   ├── action.py        # interage com a página alvo
-│   └── page_finder.py   # busca o campo por XPath ou Regex
+│   ├── browser.py
+│   ├── action.py
+│   └── page_finder.py
 ├── interface/
-│   └── cli.py           # interface de linha de comando
+│   └── cli.py
 ├── logs/
-│   ├── activity_log.py  # registra ações do usuário
-│   └── price_log.py     # registra mudanças de preço
+│   ├── activity_log.py
+│   └── price_log.py
 ├── analysis/
-│   └── complexity.py    # análise de complexidade Big O
-├── tests/               # testes unitários
-└── main.py              # ponto de entrada
+│   └── complexity.py
+├── tests/
+└── main.py
 ```
 
 ---
 
-## Logs
+## 📝 Logs
 
-Todas as ações são salvas em `activity_log.txt` na raiz do projeto. O arquivo é resetado automaticamente a cada nova execução.
+- As ações são registradas em `activity_log.txt`
+- O arquivo é resetado a cada execução
 
 ---
 
-## Dependências
+## 📦 Dependências
 
-- `selenium` — automação do browser
-- `webdriver-manager` — gerencia o ChromeDriver automaticamente
-```
+- `selenium`  
+- `webdriver-manager`  
+
+---
