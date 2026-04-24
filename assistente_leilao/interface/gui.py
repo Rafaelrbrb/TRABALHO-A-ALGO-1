@@ -1,12 +1,13 @@
 import threading
+from queue import Empty, Queue
 import tkinter as tk
 from tkinter import messagebox, scrolledtext
 
-from core.monitor import monitorar
-from core.validator import validar_url, validar_timeout, validar_nome
-from automation.browser import Browser
-from automation.action import inserir_valores
-from logs.activity_log import registrar_acao
+from assistente_leilao.automation.action import inserir_valores
+from assistente_leilao.automation.browser import Browser
+from assistente_leilao.core.monitor import monitorar
+from assistente_leilao.core.validator import validar_nome, validar_timeout, validar_url
+from assistente_leilao.logs.activity_log import registrar_acao
 
 
 class App(tk.Tk):
@@ -16,9 +17,18 @@ class App(tk.Tk):
         self.geometry("600x620")
         self.configure(bg="#f0f0f0")
 
-        self.browser = None
+        self.monitor_browser = None
+        self.action_browser = None
+        self.monitor_thread = None
+        self.action_thread = None
+        self.action_queue = None
+        self.stop_event = None
         self.nome_usuario = None
         self.monitorando = False
+        self.ui_queue = Queue()
+
+        self.after(100, self.processar_fila_ui)
+        self.protocol("WM_DELETE_WINDOW", self.ao_fechar)
 
         self.tela_login()
 
@@ -76,6 +86,9 @@ class App(tk.Tk):
         self.log.pack(padx=30, pady=10, fill="x")
 
     def iniciar(self):
+        if self.monitorando:
+            return
+
         url = self.e_url.get().strip()
         xpath = self.e_xpath.get().strip()
         regex = self.e_regex.get().strip()
@@ -97,37 +110,61 @@ class App(tk.Tk):
 
         timeout = int(timeout_str)
 
-        self.browser = Browser()
-        self.browser.iniciar()
-        self.browser.abrir_url(url)
-        driver = self.browser.obter_driver()
+        self.monitor_browser = Browser()
+
+        try:
+            self.monitor_browser.iniciar()
+            self.monitor_browser.abrir_url(url)
+            driver = self.monitor_browser.obter_driver()
+        except Exception as e:
+            self.monitor_browser.fechar()
+            self.monitor_browser = None
+            messagebox.showerror("Erro", f"Não foi possível iniciar o navegador: {e}")
+            return
 
         registrar_acao(self.nome_usuario, f"monitoramento iniciado em {url}")
         self.adicionar_log("Monitoramento iniciado...")
         self.btn_iniciar.config(state="disabled")
         self.btn_parar.config(state="normal")
         self.monitorando = True
+        self.stop_event = threading.Event()
+        self.action_queue = Queue()
 
         def callback(preco_antigo, preco_novo):
-            self.adicionar_log(f"Preço mudou: R${preco_antigo:.2f} → R${preco_novo:.2f}")
+            self.enfileirar_ui(self.adicionar_log, f"Preço mudou: R${preco_antigo:.2f} -> R${preco_novo:.2f}")
             registrar_acao(self.nome_usuario, f"preço mudou de R${preco_antigo:.2f} para R${preco_novo:.2f}")
-            inserir_valores(driver, preco_antigo, preco_novo)
+            self.action_queue.put((preco_antigo, preco_novo))
 
-        t = threading.Thread(
+        def status_callback(mensagem):
+            self.enfileirar_ui(self.adicionar_log, mensagem)
+
+        self.action_thread = threading.Thread(target=self.processar_acoes, daemon=True)
+        self.action_thread.start()
+
+        self.monitor_thread = threading.Thread(
             target=monitorar,
-            kwargs=dict(driver=driver, xpath=xpath, regex=regex, timeout=timeout, callback=callback),
-            daemon=True
+            kwargs=dict(
+                driver=driver,
+                xpath=xpath,
+                regex=regex,
+                timeout=timeout,
+                callback=callback,
+                stop_event=self.stop_event,
+                status_callback=status_callback,
+            ),
+            daemon=True,
         )
-        t.start()
+        self.monitor_thread.start()
+        self.acompanhar_monitoramento()
 
     def parar(self):
-        if self.browser:
-            self.browser.fechar()
-            self.browser = None
-        self.monitorando = False
-        registrar_acao(self.nome_usuario, "monitoramento encerrado")
-        self.adicionar_log("Monitoramento encerrado.")
-        self.btn_iniciar.config(state="normal")
+        if not self.monitorando:
+            return
+
+        if self.stop_event is not None:
+            self.stop_event.set()
+
+        self.adicionar_log("Encerrando monitoramento...")
         self.btn_parar.config(state="disabled")
 
     def adicionar_log(self, mensagem):
@@ -135,6 +172,116 @@ class App(tk.Tk):
         self.log.insert("end", mensagem + "\n")
         self.log.see("end")
         self.log.config(state="disabled")
+
+    def enfileirar_ui(self, funcao, *args, **kwargs):
+        self.ui_queue.put((funcao, args, kwargs))
+
+    def processar_fila_ui(self):
+        try:
+            while True:
+                funcao, args, kwargs = self.ui_queue.get_nowait()
+                funcao(*args, **kwargs)
+        except Empty:
+            pass
+
+        try:
+            self.after(100, self.processar_fila_ui)
+        except tk.TclError:
+            return
+
+    def obter_action_browser(self) -> Browser:
+        if self.action_browser is None:
+            self.action_browser = Browser()
+            self.action_browser.iniciar()
+        return self.action_browser
+
+    def executar_acao(self, preco_antigo, preco_novo):
+        try:
+            action_browser = self.obter_action_browser()
+            inserir_valores(action_browser.obter_driver(), preco_antigo, preco_novo)
+        except Exception as e:
+            registrar_acao(self.nome_usuario, f"falha na ação automática: {e}")
+            self.enfileirar_ui(self.adicionar_log, f"Falha ao executar ação automática: {e}")
+
+    def processar_acoes(self):
+        while True:
+            if self.stop_event is not None and self.stop_event.is_set():
+                if self.action_queue is None or self.action_queue.empty():
+                    break
+
+            try:
+                item = self.action_queue.get(timeout=0.2)
+            except Empty:
+                continue
+
+            try:
+                preco_antigo, preco_novo = item
+                self.executar_acao(preco_antigo, preco_novo)
+            finally:
+                self.action_queue.task_done()
+
+    def acompanhar_monitoramento(self):
+        if self.monitor_thread is None and self.action_thread is None:
+            return
+
+        monitor_ativo = self.monitor_thread is not None and self.monitor_thread.is_alive()
+        acao_ativa = self.action_thread is not None and self.action_thread.is_alive()
+
+        if monitor_ativo or acao_ativa:
+            self.after(200, self.acompanhar_monitoramento)
+            return
+
+        self.finalizar_monitoramento()
+
+    def finalizar_monitoramento(self):
+        if not self.monitorando:
+            return
+
+        if self.monitor_browser:
+            self.monitor_browser.fechar()
+            self.monitor_browser = None
+
+        if self.action_browser:
+            self.action_browser.fechar()
+            self.action_browser = None
+
+        self.monitor_thread = None
+        self.action_thread = None
+        self.action_queue = None
+        self.stop_event = None
+        self.monitorando = False
+
+        registrar_acao(self.nome_usuario, "monitoramento encerrado")
+        self.btn_iniciar.config(state="normal")
+        self.btn_parar.config(state="disabled")
+
+    def ao_fechar(self):
+        if self.monitorando:
+            if self.stop_event is not None:
+                self.stop_event.set()
+            self.after(200, self.tentar_fechar_janela)
+            return
+
+        if self.monitor_browser:
+            self.monitor_browser.fechar()
+            self.monitor_browser = None
+
+        if self.action_browser:
+            self.action_browser.fechar()
+            self.action_browser = None
+
+        self.destroy()
+
+    def tentar_fechar_janela(self):
+        monitor_ativo = self.monitor_thread is not None and self.monitor_thread.is_alive()
+        acao_ativa = self.action_thread is not None and self.action_thread.is_alive()
+
+        if monitor_ativo or acao_ativa:
+            self.after(200, self.tentar_fechar_janela)
+            return
+
+        self.finalizar_monitoramento()
+        self.destroy()
 
     def limpar_tela(self):
         for widget in self.winfo_children():
