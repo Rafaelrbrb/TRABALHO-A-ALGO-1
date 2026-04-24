@@ -1,43 +1,39 @@
 import time
-from core import scraper
+from core.scraper import obter_preco
+from logs.price_log import registrar_mudanca
 
 
 def monitorar(driver, xpath, regex, timeout, callback=None):
-
-    print("iniciando monitoramento...")
+    print("Iniciando monitoramento...")
 
     # pega o preço inicial
-    preco_atual = scraper.encontrar_por_xpath(driver, xpath)
-    if preco_atual is None:
-        preco_atual = scraper.encontrar_por_regex(driver, regex)
+    preco_atual = obter_preco(driver, xpath, regex)
 
     if preco_atual is None:
-        print("nao consegui achar o preco, encerrando")
+        print("Não foi possível encontrar o preço inicial. Encerrando.")
         return
 
-    print("preco inicial:", preco_atual)
+    print(f"Preço inicial: R$ {preco_atual:.2f}")
 
     while True:
         try:
             time.sleep(timeout)
             driver.refresh()
 
-            novo_preco = scraper.encontrar_por_xpath(driver, xpath)
-            if novo_preco is None:
-                novo_preco = scraper.encontrar_por_regex(driver, regex)
+            novo_preco = obter_preco(driver, xpath, regex)
 
             if novo_preco is None:
-                print("nao consegui ler o preco, tentando de novo...")
+                print("Não foi possível ler o preço, tentando novamente...")
                 continue
 
             if novo_preco != preco_atual:
-                print("preco mudou!", preco_atual, "->", novo_preco)
+                registrar_mudanca(preco_atual, novo_preco)
                 if callback:
                     callback(preco_antigo=preco_atual, preco_novo=novo_preco)
                 preco_atual = novo_preco
             else:
-                print("sem mudanca, preco atual:", preco_atual)
+                print(f"Sem mudança. Preço atual: R$ {preco_atual:.2f}")
 
         except KeyboardInterrupt:
-            print("monitoramento encerrado")
+            print("Monitoramento encerrado pelo usuário.")
             break

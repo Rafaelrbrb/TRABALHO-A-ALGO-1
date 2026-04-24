@@ -2,22 +2,22 @@ import threading
 import tkinter as tk
 from tkinter import messagebox, scrolledtext
 
-from core import scraper
 from core.monitor import monitorar
-from core.validator import validar_url, validar_timeout, validar_nome_usuario
-from automation.browser import criar_driver, abrir_pagina, fechar_driver
-from automation.action import registrar_em_pagina_alvo
-from logs.activity_log import definir_usuario, registrar_acao
+from core.validator import validar_url, validar_timeout, validar_nome
+from automation.browser import Browser
+from automation.action import inserir_valores
+from logs.activity_log import registrar_acao
 
 
 class App(tk.Tk):
     def __init__(self):
         super().__init__()
-        self.title("assistente de lances")
-        self.geometry("600x580")
+        self.title("Assistente de Lances")
+        self.geometry("600x620")
         self.configure(bg="#f0f0f0")
 
-        self.driver = None
+        self.browser = None
+        self.nome_usuario = None
         self.monitorando = False
 
         self.tela_login()
@@ -25,51 +25,40 @@ class App(tk.Tk):
     def tela_login(self):
         self.limpar_tela()
 
-        tk.Label(self, text="assistente de lances", font=("Arial", 18, "bold"), bg="#f0f0f0").pack(pady=40)
-        tk.Label(self, text="seu nome:", bg="#f0f0f0").pack()
+        tk.Label(self, text="Assistente de Lances", font=("Arial", 18, "bold"), bg="#f0f0f0").pack(pady=40)
+        tk.Label(self, text="Seu nome:", bg="#f0f0f0").pack()
 
         self.entrada_nome = tk.Entry(self, font=("Arial", 12), width=30)
         self.entrada_nome.pack(pady=8)
 
-        tk.Button(self, text="entrar", command=self.confirmar_login).pack()
+        tk.Button(self, text="Entrar", command=self.confirmar_login).pack()
 
     def confirmar_login(self):
         nome = self.entrada_nome.get().strip()
-        ok, msg = validar_nome_usuario(nome)
-        if not ok:
-            messagebox.showerror("erro", msg)
+        erro = validar_nome(nome)
+        if erro:
+            messagebox.showerror("Erro", erro)
             return
-        definir_usuario(nome)
+        self.nome_usuario = nome
+        registrar_acao(self.nome_usuario, "sessão iniciada via GUI")
         self.tela_principal()
 
     def tela_principal(self):
         self.limpar_tela()
 
-        tk.Label(self, text="url do leilao:", bg="#f0f0f0").pack(anchor="w", padx=30, pady=(20, 0))
+        tk.Label(self, text="URL do leilão:", bg="#f0f0f0").pack(anchor="w", padx=30, pady=(20, 0))
         self.e_url = tk.Entry(self, width=60)
         self.e_url.pack(padx=30)
 
-        tk.Label(self, text="xpath do preco:", bg="#f0f0f0").pack(anchor="w", padx=30, pady=(10, 0))
+        tk.Label(self, text="XPath do preço:", bg="#f0f0f0").pack(anchor="w", padx=30, pady=(10, 0))
         self.e_xpath = tk.Entry(self, width=60)
         self.e_xpath.pack(padx=30)
 
-        tk.Label(self, text="regex do preco (alternativo):", bg="#f0f0f0").pack(anchor="w", padx=30, pady=(10, 0))
+        tk.Label(self, text="Regex do preço (alternativo):", bg="#f0f0f0").pack(anchor="w", padx=30, pady=(10, 0))
         self.e_regex = tk.Entry(self, width=60)
         self.e_regex.pack(padx=30)
 
-        tk.Label(self, text="url da pagina alvo:", bg="#f0f0f0").pack(anchor="w", padx=30, pady=(10, 0))
-        self.e_url_alvo = tk.Entry(self, width=60)
-        self.e_url_alvo.pack(padx=30)
-
-        tk.Label(self, text="xpath do campo de texto na pagina alvo:", bg="#f0f0f0").pack(anchor="w", padx=30, pady=(10, 0))
-        self.e_campo_alvo = tk.Entry(self, width=60)
-        self.e_campo_alvo.pack(padx=30)
-
-        tk.Label(self, text="xpath do botao na pagina alvo:", bg="#f0f0f0").pack(anchor="w", padx=30, pady=(10, 0))
-        self.e_botao_alvo = tk.Entry(self, width=60)
-        self.e_botao_alvo.pack(padx=30)
-
-        tk.Label(self, text="intervalo de verificacao (segundos):", bg="#f0f0f0").pack(anchor="w", padx=30, pady=(10, 0))
+        tk.Label(self, text="Intervalo de verificação (segundos):", bg="#f0f0f0").pack(anchor="w", padx=30, pady=(10, 0))
         self.e_timeout = tk.Entry(self, width=10)
         self.e_timeout.insert(0, "10")
         self.e_timeout.pack(anchor="w", padx=30)
@@ -77,60 +66,67 @@ class App(tk.Tk):
         frame_botoes = tk.Frame(self, bg="#f0f0f0")
         frame_botoes.pack(pady=14)
 
-        self.btn_iniciar = tk.Button(frame_botoes, text="iniciar", bg="green", fg="white", command=self.iniciar)
+        self.btn_iniciar = tk.Button(frame_botoes, text="Iniciar", bg="green", fg="white", command=self.iniciar)
         self.btn_iniciar.grid(row=0, column=0, padx=6)
 
-        self.btn_parar = tk.Button(frame_botoes, text="parar", bg="red", fg="white", state="disabled", command=self.parar)
+        self.btn_parar = tk.Button(frame_botoes, text="Parar", bg="red", fg="white", state="disabled", command=self.parar)
         self.btn_parar.grid(row=0, column=1, padx=6)
 
-        self.log = scrolledtext.ScrolledText(self, height=6, state="disabled", bg="#1e1e1e", fg="white")
+        self.log = scrolledtext.ScrolledText(self, height=8, state="disabled", bg="#1e1e1e", fg="white")
         self.log.pack(padx=30, pady=10, fill="x")
 
     def iniciar(self):
         url = self.e_url.get().strip()
-        xpath = self.e_xpath.get().strip() or None
-        regex = self.e_regex.get().strip() or None
-        url_alvo = self.e_url_alvo.get().strip()
-        campo_alvo = self.e_campo_alvo.get().strip()
-        botao_alvo = self.e_botao_alvo.get().strip()
-        timeout = self.e_timeout.get().strip()
+        xpath = self.e_xpath.get().strip()
+        regex = self.e_regex.get().strip()
+        timeout_str = self.e_timeout.get().strip()
 
-        ok, msg = validar_url(url)
-        if not ok:
-            messagebox.showerror("erro", msg)
+        erro_url = validar_url(url)
+        if erro_url:
+            messagebox.showerror("Erro", erro_url)
             return
 
-        ok, timeout, msg = validar_timeout(timeout)
-        if not ok:
-            messagebox.showerror("erro", msg)
+        erro_timeout = validar_timeout(timeout_str)
+        if erro_timeout:
+            messagebox.showerror("Erro", erro_timeout)
             return
 
-        self.driver = criar_driver()
-        abrir_pagina(self.driver, url)
+        if not xpath and not regex:
+            messagebox.showerror("Erro", "Informe pelo menos XPath ou Regex.")
+            return
 
-        registrar_acao("monitoramento iniciado")
-        self.adicionar_log("monitoramento iniciado...")
+        timeout = int(timeout_str)
+
+        self.browser = Browser()
+        self.browser.iniciar()
+        self.browser.abrir_url(url)
+        driver = self.browser.obter_driver()
+
+        registrar_acao(self.nome_usuario, f"monitoramento iniciado em {url}")
+        self.adicionar_log("Monitoramento iniciado...")
         self.btn_iniciar.config(state="disabled")
         self.btn_parar.config(state="normal")
+        self.monitorando = True
 
         def callback(preco_antigo, preco_novo):
-            self.adicionar_log(f"preco mudou: R${preco_antigo:.2f} -> R${preco_novo:.2f}")
-            registrar_acao(f"preco mudou de R${preco_antigo:.2f} para R${preco_novo:.2f}")
-            registrar_em_pagina_alvo(self.driver, url_alvo, campo_alvo, botao_alvo, preco_antigo, preco_novo)
+            self.adicionar_log(f"Preço mudou: R${preco_antigo:.2f} → R${preco_novo:.2f}")
+            registrar_acao(self.nome_usuario, f"preço mudou de R${preco_antigo:.2f} para R${preco_novo:.2f}")
+            inserir_valores(driver, preco_antigo, preco_novo)
 
         t = threading.Thread(
             target=monitorar,
-            kwargs=dict(driver=self.driver, xpath=xpath, regex=regex, timeout=timeout, callback=callback),
+            kwargs=dict(driver=driver, xpath=xpath, regex=regex, timeout=timeout, callback=callback),
             daemon=True
         )
         t.start()
 
     def parar(self):
-        if self.driver:
-            fechar_driver(self.driver)
-            self.driver = None
-        registrar_acao("monitoramento encerrado")
-        self.adicionar_log("monitoramento encerrado.")
+        if self.browser:
+            self.browser.fechar()
+            self.browser = None
+        self.monitorando = False
+        registrar_acao(self.nome_usuario, "monitoramento encerrado")
+        self.adicionar_log("Monitoramento encerrado.")
         self.btn_iniciar.config(state="normal")
         self.btn_parar.config(state="disabled")
 
