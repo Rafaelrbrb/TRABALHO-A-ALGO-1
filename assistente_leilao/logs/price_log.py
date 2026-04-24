@@ -1,12 +1,17 @@
+import logging
 from datetime import datetime
+
+LOGGER = logging.getLogger(__name__)
 
 
 def registrar_mudanca(preco_antigo, preco_novo):
-
     agora = datetime.now().strftime("%H:%M:%S")
     variacao = preco_novo - preco_antigo
 
-    print(f"[{agora}] preco mudou!")
-    print(f"  antes: R$ {preco_antigo:.2f}")
-    print(f"  agora: R$ {preco_novo:.2f}")
-    print(f"  variacao: R$ {variacao:.2f}")
+    LOGGER.info(
+        "[%s] preco mudou! antes=R$ %.2f agora=R$ %.2f variacao=R$ %.2f",
+        agora,
+        preco_antigo,
+        preco_novo,
+        variacao,
+    )

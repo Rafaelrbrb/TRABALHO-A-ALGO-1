@@ -1,4 +1,9 @@
-from core.validator import validar_url, validar_timeout, validar_nome, validar_seletor
+from core.validator import (
+    validar_nome,
+    validar_seletor,
+    validar_timeout,
+    validar_url,
+)
 from logs.activity_log import registrar_acao
 
 

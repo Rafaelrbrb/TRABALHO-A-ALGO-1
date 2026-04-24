@@ -1,0 +1,30 @@
+[2026-04-23 23:18:31] davi: sessão iniciada
+[2026-04-23 23:18:42] davi: URL informada: https://finance.yahoo.com/quote/BTC-USD/
+[2026-04-23 23:18:49] davi: Timeout informado: 20s
+[2026-04-23 23:19:58] davi: Seletor informado — XPath: '//*[@id="main-content-wrapper"]/section[1]/div[2]/div[1]/section/div/section/div[1]/span[1]' | Regex: ''
+[2026-04-23 23:19:58] davi: monitoramento iniciado
+[2026-04-23 23:36:37] davi: sessão iniciada
+[2026-04-23 23:36:56] davi: URL informada: https://finance.yahoo.com/quote/BTC-USD/
+[2026-04-23 23:37:04] davi: Timeout informado: 15s
+[2026-04-23 23:37:24] davi: Seletor informado — XPath: '//*[@id="main-content-wrapper"]/section[1]/div[2]/div[1]/section/div/section/div[1]/span[1]' | Regex: ''
+[2026-04-23 23:37:24] davi: monitoramento iniciado
+[2026-04-23 23:38:30] davi: preço mudou de R$78.32 para R$78.32
+[2026-04-23 23:59:00] davi: sessão iniciada
+[2026-04-23 23:59:08] davi: URL informada: https://finance.yahoo.com/quote/BTC-USD/
+[2026-04-23 23:59:12] davi: Timeout informado: 15s
+[2026-04-23 23:59:37] davi: Seletor informado — XPath: '//*[@id="main-content-wrapper"]/section[1]/div[2]/div[1]/section/div/section/div[1]/span[1]' | Regex: ''
+[2026-04-23 23:59:37] davi: monitoramento iniciado
+[2026-04-24 00:00:59] davi: preço mudou de R$78188.20 para R$78185.38
+[2026-04-24 00:04:44] davi: sessão iniciada
+[2026-04-24 00:05:00] davi: URL informada: https://finance.yahoo.com/quote/BTC-USD/
+[2026-04-24 00:05:04] davi: Timeout informado: 15s
+[2026-04-24 00:05:28] davi: Seletor informado — XPath: '//*[@id="main-content-wrapper"]/section[1]/div[2]/div[1]/section/div/section/div[1]/span[1]' | Regex: ''
+[2026-04-24 00:05:28] davi: monitoramento iniciado
+[2026-04-24 00:06:08] davi: preço mudou de R$78124.48 para R$78121.83
+[2026-04-24 00:07:02] davi: sessão iniciada
+[2026-04-24 00:07:08] davi: URL informada: https://finance.yahoo.com/quote/BTC-USD/
+[2026-04-24 00:07:16] davi: Timeout informado: 10s
+[2026-04-24 00:07:21] davi: Seletor informado — XPath: '//*[@id="main-content-wrapper"]/section[1]/div[2]/div[1]/section/div/section/div[1]/span[1]' | Regex: ''
+[2026-04-24 00:07:21] davi: monitoramento iniciado
+[2026-04-24 00:07:45] davi: preço mudou de R$78126.20 para R$78144.70
+[2026-04-24 00:08:21] davi: preço mudou de R$78144.70 para R$78132.64

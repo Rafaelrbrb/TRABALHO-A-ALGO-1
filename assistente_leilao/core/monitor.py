@@ -6,13 +6,13 @@ from logs.price_log import registrar_mudanca
 def monitorar(driver, xpath, regex, timeout, callback=None):
     print("Iniciando monitoramento...")
 
-    # pega o preço inicial
     preco_atual = obter_preco(driver, xpath, regex)
 
     if preco_atual is None:
         print("Não foi possível encontrar o preço inicial. Encerrando.")
         return
 
+    preco_atual = round(preco_atual, 2)
     print(f"Preço inicial: R$ {preco_atual:.2f}")
 
     while True:
@@ -25,6 +25,8 @@ def monitorar(driver, xpath, regex, timeout, callback=None):
             if novo_preco is None:
                 print("Não foi possível ler o preço, tentando novamente...")
                 continue
+
+            novo_preco = round(novo_preco, 2)
 
             if novo_preco != preco_atual:
                 registrar_mudanca(preco_atual, novo_preco)

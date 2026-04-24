@@ -1,35 +1,48 @@
+from __future__ import annotations
+
+import logging
 import re
+from functools import lru_cache
+
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
-WAIT_TIMEOUT = 10
+LOGGER = logging.getLogger(__name__)
+
+WAIT_TIMEOUT = 2
+WAIT_POLL_FREQUENCY = 0.2
+
+
+@lru_cache(maxsize=32)
+def _compilar_regex(regex: str):
+    return re.compile(regex)
 
 
 def _buscar_por_xpath(driver, xpath: str) -> str | None:
     try:
-        wait = WebDriverWait(driver, WAIT_TIMEOUT)
+        wait = WebDriverWait(driver, WAIT_TIMEOUT, poll_frequency=WAIT_POLL_FREQUENCY)
         elemento = wait.until(EC.presence_of_element_located((By.XPATH, xpath)))
         texto = elemento.text.strip()
-        print(f"[page_finder] Elemento encontrado via XPath: {xpath}")
+        LOGGER.debug("Elemento encontrado via XPath: %s", xpath)
         return texto if texto else None
     except Exception:
-        print(f"[page_finder] XPath não encontrou elemento: {xpath}")
+        LOGGER.debug("XPath não encontrou elemento: %s", xpath)
         return None
 
 
 def _buscar_por_regex(driver, regex: str) -> str | None:
     try:
         html = driver.page_source
-        match = re.search(regex, html)
+        match = _compilar_regex(regex).search(html)
         if match:
             texto = match.group(0).strip()
-            print(f"[page_finder] Elemento encontrado via Regex: {regex}")
+            LOGGER.debug("Elemento encontrado via Regex: %s", regex)
             return texto
-        print(f"[page_finder] Regex não encontrou correspondência: {regex}")
+        LOGGER.debug("Regex não encontrou correspondência: %s", regex)
         return None
     except Exception:
-        print(f"[page_finder] Erro ao aplicar Regex: {regex}")
+        LOGGER.warning("Erro ao aplicar Regex: %s", regex)
         return None
 
 
@@ -44,5 +57,5 @@ def encontrar_valor(driver, xpath: str = "", regex: str = "") -> str | None:
         if resultado is not None:
             return resultado
 
-    print("[page_finder] Nenhum seletor encontrou o elemento na página.")
+    LOGGER.debug("Nenhum seletor encontrou o elemento na página")
     return None
