@@ -1,11 +1,15 @@
-from core.validator import validar_url, validar_timeout, validar_nome, validar_seletor
+from core.validator import (
+    validar_nome,
+    validar_seletor,
+    validar_timeout,
+    validar_url,
+)
 from logs.activity_log import registrar_acao
 
 
 def pedir_nome() -> str:
     while True:
         nome = input("Digite seu nome (apenas letras, mínimo 3): ").strip()
-        from core.validator import validar_nome
         erro = validar_nome(nome)
         if erro is None:
             registrar_acao(nome, "sessão iniciada")
